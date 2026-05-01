@@ -13,15 +13,25 @@
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body id="home">
+<body id="home" style="padding-top: 35px;">
+
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        ⚠️ تنبيه: هذا الموقع هو نسخة تجريبية للعرض فقط، وليس موقعاً حقيقياً لعيادة تعمل.
+    </div>
+
+    <!-- WhatsApp Demo Popup -->
+    <div class="demo-popup" id="wa-demo-popup">
+        هذه الميزة تأتي مع الموقع لربط عملائك برقم الواتساب الخاص بك مباشرة، وهي للعرض التجريبي فقط!
+    </div>
 
     <!-- Floating WhatsApp -->
-    <a href="https://wa.me/97333662255" class="whatsapp-float" target="_blank" id="wa-btn" title="تواصل معنا لإنشاء موقع لعيادتك">
+    <a href="javascript:void(0)" onclick="showWaDemo()" class="whatsapp-float" id="wa-btn" title="تواصل معنا لإنشاء موقع لعيادتك">
         <i data-lucide="message-circle"></i>
     </a>
 
     <!-- Header -->
-    <header id="header">
+    <header id="header" style="top: 35px;">
         <div class="container">
             <div class="header-inner">
                 <a href="#home" class="logo">DENTALIA <span style="color: var(--accent);">LUXE</span></a>
@@ -181,6 +191,14 @@
             else header.classList.remove('scrolled');
         });
 
+        function showWaDemo() {
+            const popup = document.getElementById('wa-demo-popup');
+            popup.classList.add('show');
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 4000);
+        }
+
         let appData = {};
 
         async function loadContent() {
@@ -188,9 +206,10 @@
             appData = await res.json();
 
             document.getElementById('about-text').innerText = appData.settings.about_text || '';
-            if (appData.settings.whatsapp) {
-                document.getElementById('wa-btn').href = `https://wa.me/${appData.settings.whatsapp.replace('+', '')}`;
-            }
+            // WhatsApp link is disabled for demo
+            // if (appData.settings.whatsapp) {
+            //     document.getElementById('wa-btn').href = \`https://wa.me/\${appData.settings.whatsapp.replace('+', '')}\`;
+            // }
 
             // Render Services
             document.getElementById('services-grid').innerHTML = appData.services.map(s => `

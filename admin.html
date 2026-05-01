@@ -46,6 +46,23 @@
         .stat-card .val { font-size: 24px; font-weight: 900; color: var(--primary); }
         .stat-card .val.green { color: #10b981; }
         .stat-card .val.red { color: #ef4444; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        @media (max-width: 900px) {
+            .admin-sidebar { position: static; width: 100%; height: auto; padding: 20px; }
+            .admin-main { margin-right: 0; padding: 15px; min-height: auto; }
+            .sidebar-links { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+            .sidebar-links li { margin-bottom: 0; }
+            .sidebar-links a { padding: 10px 15px; font-size: 14px; }
+            .stat-grid { grid-template-columns: 1fr 1fr; }
+            .modal-content { padding: 20px; margin: 15px; }
+        }
+        @media (max-width: 600px) {
+            .stat-grid { grid-template-columns: 1fr; }
+            th, td { padding: 10px; font-size: 14px; min-width: 120px; }
+            .admin-card { padding: 20px; }
+            .btn-premium { width: 100%; margin-bottom: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -211,60 +228,60 @@
 
         // --- Render Functions ---
         function renderAppointments(data) {
-            let html = `<table><thead><tr><th>المريض</th><th>الهاتف</th><th>الخدمة</th><th>الطبيب</th><th>التاريخ والوقت</th><th>حذف</th></tr></thead><tbody>`;
+            let html = `<div class="table-responsive"><table><thead><tr><th>المريض</th><th>الهاتف</th><th>الخدمة</th><th>الطبيب</th><th>التاريخ والوقت</th><th>حذف</th></tr></thead><tbody>`;
             data.forEach(a => {
                 html += `<tr><td>${a.name}</td><td>${a.phone}</td><td>${a.service || '-'}</td><td>${a.doctor}</td><td>${a.date} ${a.time}</td>
                 <td><button onclick="deleteItem('appointments', ${a.id})" class="btn-del"><i data-lucide="trash-2"></i></button></td></tr>`;
             });
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             document.getElementById('appointments-list').innerHTML = html;
         }
 
         function renderDoctors(data) {
-            let html = `<table><thead><tr><th>الاسم</th><th>التخصص</th><th>إجراءات</th></tr></thead><tbody>`;
+            let html = `<div class="table-responsive"><table><thead><tr><th>الاسم</th><th>التخصص</th><th>إجراءات</th></tr></thead><tbody>`;
             data.forEach(d => {
                 html += `<tr><td>${d.name}</td><td>${d.specialty}</td><td>
                 <button onclick="editItem('doctor', ${d.id})" class="btn-action"><i data-lucide="edit"></i></button>
                 <button onclick="deleteItem('doctors', ${d.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
                 </td></tr>`;
             });
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             document.getElementById('doctors-list').innerHTML = html;
         }
 
         function renderServices(data) {
-            let html = `<table><thead><tr><th>الخدمة</th><th>السعر</th><th>القيمة الحسابية</th><th>إجراءات</th></tr></thead><tbody>`;
+            let html = `<div class="table-responsive"><table><thead><tr><th>الخدمة</th><th>السعر</th><th>القيمة الحسابية</th><th>إجراءات</th></tr></thead><tbody>`;
             data.forEach(s => {
                 html += `<tr><td>${s.name}</td><td>${s.price}</td><td>${s.priceValue || 0} د.ب</td><td>
                 <button onclick="editItem('service', ${s.id})" class="btn-action"><i data-lucide="edit"></i></button>
                 <button onclick="deleteItem('services', ${s.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
                 </td></tr>`;
             });
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             document.getElementById('services-list').innerHTML = html;
         }
 
         function renderArticles(data) {
-            let html = `<table><thead><tr><th>العنوان</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>`;
+            let html = `<div class="table-responsive"><table><thead><tr><th>العنوان</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>`;
             data.forEach(a => {
                 html += `<tr><td>${a.title}</td><td>${new Date(a.createdAt).toLocaleDateString('ar-EG')}</td><td>
                 <button onclick="editItem('article', ${a.id})" class="btn-action"><i data-lucide="edit"></i></button>
                 <button onclick="deleteItem('articles', ${a.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
                 </td></tr>`;
             });
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             document.getElementById('articles-list').innerHTML = html;
         }
 
         function renderExpenses(data) {
             if(!data) return;
-            let html = `<table><thead><tr><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>حذف</th></tr></thead><tbody>`;
+            let html = `<div class="table-responsive"><table><thead><tr><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>حذف</th></tr></thead><tbody>`;
             data.forEach(e => {
                 html += `<tr><td>${e.title}</td><td>${e.amount} د.ب</td><td>${new Date(e.createdAt).toLocaleDateString('ar-EG')}</td><td>
                 <button onclick="deleteItem('expenses', ${e.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
                 </td></tr>`;
             });
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             document.getElementById('expenses-list').innerHTML = html;
         }
 

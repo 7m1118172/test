@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | دنتاليا لوكس</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #f0f2f5; }
+        #admin-content { display: none; }
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 2000;
+        }
+        .login-box { background: white; padding: 40px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; }
+        .admin-sidebar { width: 280px; background: var(--primary); color: white; height: 100vh; position: fixed; right: 0; top: 0; padding: 40px 20px; overflow-y: auto; }
+        .admin-main { margin-right: 280px; padding: 40px; min-height: 100vh; }
+        .admin-card { background: white; border-radius: 20px; padding: 30px; box-shadow: var(--shadow-sm); margin-bottom: 30px; }
+        .sidebar-links { list-style: none; margin-top: 50px; }
+        .sidebar-links li { margin-bottom: 10px; }
+        .sidebar-links a {
+            color: rgba(255,255,255,0.7); text-decoration: none; display: flex; align-items: center; gap: 12px;
+            padding: 15px 20px; border-radius: 12px; transition: var(--transition-lux); cursor: pointer;
+        }
+        .sidebar-links a:hover, .sidebar-links a.active { background: rgba(255,255,255,0.1); color: var(--accent); }
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 700; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000;
+        }
+        .modal-content { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: right; padding: 15px; background: #f8f9fa; border-bottom: 2px solid #eee; }
+        td { padding: 15px; border-bottom: 1px solid #eee; }
+        .btn-action { color: #3b82f6; border: none; background: none; cursor: pointer; margin-left: 10px; }
+        .btn-del { color: #dc2626; border: none; background: none; cursor: pointer; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--bg-soft); padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #eee; }
+        .stat-card h4 { color: var(--text-muted); margin-bottom: 10px; font-size: 14px; }
+        .stat-card .val { font-size: 24px; font-weight: 900; color: var(--primary); }
+        .stat-card .val.green { color: #10b981; }
+        .stat-card .val.red { color: #ef4444; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="margin-bottom: 30px; color: var(--primary);">دخول الإدارة</h2>
+            <input type="password" id="admin-pass" class="form-control" style="margin-bottom: 20px;" placeholder="كلمة المرور">
+            <button onclick="checkAuth()" class="btn-premium" style="width: 100%; padding: 15px;">دخول</button>
+        </div>
+    </div>
+
+    <div id="admin-content">
+        <div class="admin-sidebar">
+            <div class="logo" style="color: white; text-align: center; margin-bottom: 20px;">DENTALIA <span>LUXE</span></div>
+            <ul class="sidebar-links">
+                <li><a onclick="showSection('dashboard')" id="link-dashboard" class="active"><i data-lucide="pie-chart"></i> المالية والإحصائيات</a></li>
+                <li><a onclick="showSection('appointments')" id="link-appointments"><i data-lucide="calendar"></i> المواعيد</a></li>
+                <li><a onclick="showSection('doctors')" id="link-doctors"><i data-lucide="users"></i> الأطباء</a></li>
+                <li><a onclick="showSection('services')" id="link-services"><i data-lucide="settings"></i> الخدمات</a></li>
+                <li><a onclick="showSection('articles')" id="link-articles"><i data-lucide="file-text"></i> المقالات</a></li>
+                <li><a onclick="showSection('settings')" id="link-settings"><i data-lucide="sliders"></i> الإعدادات</a></li>
+                <li style="margin-top: 40px;"><a href="/"><i data-lucide="external-link"></i> عرض الموقع</a></li>
+            </ul>
+        </div>
+
+        <div class="admin-main">
+            <!-- Dashboard (Finance) -->
+            <div id="section-dashboard" class="admin-section active">
+                <div class="admin-card">
+                    <h3>المالية والإحصائيات</h3>
+                    <div class="stat-grid" style="margin-top: 20px;">
+                        <div class="stat-card"><h4>الدخل اليومي</h4><div class="val green" id="stat-daily">0 د.ب</div></div>
+                        <div class="stat-card"><h4>الدخل الشهري</h4><div class="val green" id="stat-monthly">0 د.ب</div></div>
+                        <div class="stat-card"><h4>إجمالي المصروفات</h4><div class="val red" id="stat-expenses">0 د.ب</div></div>
+                        <div class="stat-card"><h4>صافي الأرباح</h4><div class="val" id="stat-net">0 د.ب</div></div>
+                    </div>
+                    <div style="height: 300px; margin-top: 40px;">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="admin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>سجل المصروفات</h3>
+                        <button class="btn-premium" onclick="showModal('expense')" style="padding: 10px 20px; font-size: 14px;">+ إضافة مصروف</button>
+                    </div>
+                    <div id="expenses-list"></div>
+                </div>
+            </div>
+
+            <!-- Appointments -->
+            <div id="section-appointments" class="admin-section">
+                <div class="admin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>إدارة المواعيد</h3>
+                        <button class="btn-premium" onclick="showModal('appointment')" style="padding: 10px 20px; font-size: 14px;">+ حجز موعد يدوي</button>
+                    </div>
+                    <div id="appointments-list"></div>
+                </div>
+            </div>
+
+            <!-- Doctors -->
+            <div id="section-doctors" class="admin-section">
+                <div class="admin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>إدارة الأطباء</h3>
+                        <button class="btn-premium" onclick="showModal('doctor')" style="padding: 10px 20px; font-size: 14px;">+ إضافة طبيب</button>
+                    </div>
+                    <div id="doctors-list"></div>
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div id="section-services" class="admin-section">
+                <div class="admin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>إدارة الخدمات</h3>
+                        <button class="btn-premium" onclick="showModal('service')" style="padding: 10px 20px; font-size: 14px;">+ إضافة خدمة</button>
+                    </div>
+                    <div id="services-list"></div>
+                </div>
+            </div>
+
+            <!-- Articles -->
+            <div id="section-articles" class="admin-section">
+                <div class="admin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>إدارة المقالات</h3>
+                        <button class="btn-premium" onclick="showModal('article')" style="padding: 10px 20px; font-size: 14px;">+ إضافة مقال</button>
+                    </div>
+                    <div id="articles-list"></div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div id="section-settings" class="admin-section">
+                <div class="admin-card">
+                    <h3>إعدادات الموقع</h3>
+                    <div style="margin-top: 30px;">
+                        <div class="form-group"><label>رقم الواتساب</label><input type="text" id="set-whatsapp" class="form-control"></div>
+                        <div class="form-group"><label>رابط انستقرام</label><input type="text" id="set-insta" class="form-control"></div>
+                        <div class="form-group"><label>نص "من نحن"</label><textarea id="set-about" class="form-control" rows="4"></textarea></div>
+                        <button onclick="saveSettings()" class="btn-premium" style="margin-top: 20px; padding: 12px 30px;">حفظ الإعدادات</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal" id="form-modal">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-bottom: 30px; color: var(--primary);"></h3>
+            <form id="dynamic-form">
+                <div id="form-fields"></div>
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn-premium" style="flex: 1; padding: 15px;">حفظ</button>
+                    <button type="button" class="btn-premium" onclick="hideModal()" style="background: #eee; color: #333; flex: 1; padding: 15px;">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentPass = '';
+        let currentData = {};
+        let currentModalType = '';
+        let currentEditId = null;
+        let financeChartObj = null;
+
+        function checkAuth() {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === '123123') {
+                currentPass = pass;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                loadData();
+            } else { alert('خطأ!'); }
+        }
+
+        async function loadData() {
+            const res = await fetch('/api/data');
+            currentData = await res.json();
+            
+            renderAppointments(currentData.appointments);
+            renderDoctors(currentData.doctors);
+            renderServices(currentData.services);
+            renderArticles(currentData.articles);
+            renderExpenses(currentData.expenses);
+            fillSettings(currentData.settings);
+            calculateFinances();
+            
+            lucide.createIcons();
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-links a').forEach(a => a.classList.remove('active'));
+            document.getElementById(`section-${section}`).classList.add('active');
+            document.getElementById(`link-${section}`).classList.add('active');
+        }
+
+        // --- Render Functions ---
+        function renderAppointments(data) {
+            let html = `<table><thead><tr><th>المريض</th><th>الهاتف</th><th>الخدمة</th><th>الطبيب</th><th>التاريخ والوقت</th><th>حذف</th></tr></thead><tbody>`;
+            data.forEach(a => {
+                html += `<tr><td>${a.name}</td><td>${a.phone}</td><td>${a.service || '-'}</td><td>${a.doctor}</td><td>${a.date} ${a.time}</td>
+                <td><button onclick="deleteItem('appointments', ${a.id})" class="btn-del"><i data-lucide="trash-2"></i></button></td></tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('appointments-list').innerHTML = html;
+        }
+
+        function renderDoctors(data) {
+            let html = `<table><thead><tr><th>الاسم</th><th>التخصص</th><th>إجراءات</th></tr></thead><tbody>`;
+            data.forEach(d => {
+                html += `<tr><td>${d.name}</td><td>${d.specialty}</td><td>
+                <button onclick="editItem('doctor', ${d.id})" class="btn-action"><i data-lucide="edit"></i></button>
+                <button onclick="deleteItem('doctors', ${d.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
+                </td></tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('doctors-list').innerHTML = html;
+        }
+
+        function renderServices(data) {
+            let html = `<table><thead><tr><th>الخدمة</th><th>السعر</th><th>القيمة الحسابية</th><th>إجراءات</th></tr></thead><tbody>`;
+            data.forEach(s => {
+                html += `<tr><td>${s.name}</td><td>${s.price}</td><td>${s.priceValue || 0} د.ب</td><td>
+                <button onclick="editItem('service', ${s.id})" class="btn-action"><i data-lucide="edit"></i></button>
+                <button onclick="deleteItem('services', ${s.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
+                </td></tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('services-list').innerHTML = html;
+        }
+
+        function renderArticles(data) {
+            let html = `<table><thead><tr><th>العنوان</th><th>التاريخ</th><th>إجراءات</th></tr></thead><tbody>`;
+            data.forEach(a => {
+                html += `<tr><td>${a.title}</td><td>${new Date(a.createdAt).toLocaleDateString('ar-EG')}</td><td>
+                <button onclick="editItem('article', ${a.id})" class="btn-action"><i data-lucide="edit"></i></button>
+                <button onclick="deleteItem('articles', ${a.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
+                </td></tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('articles-list').innerHTML = html;
+        }
+
+        function renderExpenses(data) {
+            if(!data) return;
+            let html = `<table><thead><tr><th>البيان</th><th>المبلغ</th><th>التاريخ</th><th>حذف</th></tr></thead><tbody>`;
+            data.forEach(e => {
+                html += `<tr><td>${e.title}</td><td>${e.amount} د.ب</td><td>${new Date(e.createdAt).toLocaleDateString('ar-EG')}</td><td>
+                <button onclick="deleteItem('expenses', ${e.id})" class="btn-del"><i data-lucide="trash-2"></i></button>
+                </td></tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('expenses-list').innerHTML = html;
+        }
+
+        function fillSettings(s) {
+            if(!s) return;
+            document.getElementById('set-whatsapp').value = s.whatsapp || '';
+            document.getElementById('set-insta').value = s.instagram || '';
+            document.getElementById('set-about').value = s.about_text || '';
+        }
+
+        async function saveSettings() {
+            const settings = {
+                whatsapp: document.getElementById('set-whatsapp').value,
+                instagram: document.getElementById('set-insta').value,
+                about_text: document.getElementById('set-about').value
+            };
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: currentPass, settings })
+            });
+            alert('تم الحفظ بنجاح');
+            loadData();
+        }
+
+        // --- Finance Logic ---
+        function calculateFinances() {
+            const now = new Date();
+            let dailyInc = 0, monthlyInc = 0, yearlyInc = 0;
+            let totalExp = 0;
+
+            // Calculate Expenses
+            if(currentData.expenses) {
+                currentData.expenses.forEach(e => totalExp += parseFloat(e.amount));
+            }
+
+            // Calculate Income from Appointments
+            // Rule: appointment must be finished (time + 10 mins < now)
+            currentData.appointments.forEach(app => {
+                const appDateStr = app.date + 'T' + app.time;
+                const appDate = new Date(appDateStr);
+                const finishedTime = new Date(appDate.getTime() + (30 * 60000)); // assume 30 min duration + padding
+                
+                if (finishedTime < now) {
+                    // It's a completed appointment, find the service price
+                    const service = currentData.services.find(s => s.name === app.service);
+                    const val = service ? parseFloat(service.priceValue) || 0 : 0;
+                    
+                    if (appDate.toDateString() === now.toDateString()) dailyInc += val;
+                    if (appDate.getMonth() === now.getMonth() && appDate.getFullYear() === now.getFullYear()) monthlyInc += val;
+                    if (appDate.getFullYear() === now.getFullYear()) yearlyInc += val;
+                }
+            });
+
+            document.getElementById('stat-daily').innerText = `${dailyInc} د.ب`;
+            document.getElementById('stat-monthly').innerText = `${monthlyInc} د.ب`;
+            document.getElementById('stat-expenses').innerText = `${totalExp} د.ب`;
+            document.getElementById('stat-net').innerText = `${monthlyInc - totalExp} د.ب`;
+
+            updateChart(dailyInc, monthlyInc, yearlyInc, totalExp);
+        }
+
+        function updateChart(d, m, y, e) {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            if (financeChartObj) financeChartObj.destroy();
+            
+            financeChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['اليوم', 'الشهر (الدخل)', 'الشهر (المصروفات)'],
+                    datasets: [{
+                        label: 'المبالغ (د.ب)',
+                        data: [d, m, e],
+                        backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- CRUD Logic ---
+        function showModal(type, isEdit = false, itemData = null) {
+            currentModalType = type;
+            currentEditId = isEdit ? itemData.id : null;
+            document.getElementById('modal-title').innerText = isEdit ? 'تعديل' : 'إضافة جديد';
+            document.getElementById('form-modal').style.display = 'flex';
+            
+            let fields = '';
+            if (type === 'doctor') {
+                fields = `
+                    <div class="form-group"><label>الاسم</label><input id="f-name" class="form-control" value="${isEdit ? itemData.name : ''}" required></div>
+                    <div class="form-group"><label>التخصص</label><input id="f-spec" class="form-control" value="${isEdit ? itemData.specialty : ''}" required></div>
+                    <div class="form-group"><label>الخبرة</label><input id="f-exp" class="form-control" value="${isEdit ? itemData.experience : ''}" required></div>
+                    <div class="form-group"><label>السيرة</label><textarea id="f-bio" class="form-control" required>${isEdit ? itemData.bio : ''}</textarea></div>
+                    <div class="form-group"><label>رابط الصورة</label><input id="f-img" class="form-control" value="${isEdit ? itemData.image : ''}"></div>
+                `;
+            } else if (type === 'service') {
+                fields = `
+                    <div class="form-group"><label>اسم الخدمة</label><input id="f-name" class="form-control" value="${isEdit ? itemData.name : ''}" required></div>
+                    <div class="form-group"><label>الوصف</label><input id="f-desc" class="form-control" value="${isEdit ? itemData.description : ''}" required></div>
+                    <div class="form-group"><label>السعر (نص للعرض)</label><input id="f-price" class="form-control" value="${isEdit ? itemData.price : ''}" required></div>
+                    <div class="form-group"><label>القيمة الحسابية (أرقام فقط للحسابات)</label><input type="number" id="f-val" class="form-control" value="${isEdit ? itemData.priceValue : ''}" required></div>
+                `;
+            } else if (type === 'article') {
+                fields = `
+                    <div class="form-group"><label>العنوان</label><input id="f-title" class="form-control" value="${isEdit ? itemData.title : ''}" required></div>
+                    <div class="form-group"><label>الوصف المختصر</label><input id="f-desc" class="form-control" value="${isEdit ? itemData.description : ''}" required></div>
+                    <div class="form-group"><label>المحتوى</label><textarea id="f-content" class="form-control" rows="6" required>${isEdit ? itemData.content : ''}</textarea></div>
+                    <div class="form-group"><label>رابط الصورة</label><input id="f-img" class="form-control" value="${isEdit ? itemData.image : ''}"></div>
+                `;
+            } else if (type === 'expense') {
+                fields = `
+                    <div class="form-group"><label>البيان</label><input id="f-title" class="form-control" required></div>
+                    <div class="form-group"><label>المبلغ</label><input type="number" id="f-amount" class="form-control" required></div>
+                `;
+            } else if (type === 'appointment') {
+                const docs = currentData.doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+                const servs = currentData.services.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+                fields = `
+                    <div class="form-group"><label>اسم المريض</label><input id="f-name" class="form-control" required></div>
+                    <div class="form-group"><label>الهاتف</label><input id="f-phone" class="form-control" required></div>
+                    <div class="form-group"><label>الطبيب</label><select id="f-doc" class="form-control">${docs}</select></div>
+                    <div class="form-group"><label>الخدمة</label><select id="f-serv" class="form-control">${servs}</select></div>
+                    <div class="form-group"><label>التاريخ</label><input type="date" id="f-date" class="form-control" required></div>
+                    <div class="form-group"><label>الوقت</label><input type="time" id="f-time" class="form-control" required></div>
+                `;
+            }
+            document.getElementById('form-fields').innerHTML = fields;
+        }
+
+        function editItem(type, id) {
+            const dataArr = currentData[type + 's'];
+            const item = dataArr.find(i => i.id === id);
+            showModal(type, true, item);
+        }
+
+        function hideModal() { document.getElementById('form-modal').style.display = 'none'; }
+
+        document.getElementById('dynamic-form').onsubmit = async (e) => {
+            e.preventDefault();
+            let item = {};
+            
+            if (currentModalType === 'doctor') {
+                item = {
+                    name: document.getElementById('f-name').value,
+                    specialty: document.getElementById('f-spec').value,
+                    experience: document.getElementById('f-exp').value,
+                    image: document.getElementById('f-img').value,
+                    bio: document.getElementById('f-bio').value
+                };
+            } else if (currentModalType === 'service') {
+                item = {
+                    name: document.getElementById('f-name').value,
+                    description: document.getElementById('f-desc').value,
+                    price: document.getElementById('f-price').value,
+                    priceValue: parseFloat(document.getElementById('f-val').value)
+                };
+            } else if (currentModalType === 'article') {
+                item = {
+                    title: document.getElementById('f-title').value,
+                    slug: document.getElementById('f-title').value.toLowerCase().replace(/ /g, '-'),
+                    description: document.getElementById('f-desc').value,
+                    content: document.getElementById('f-content').value,
+                    image: document.getElementById('f-img').value
+                };
+            } else if (currentModalType === 'expense') {
+                item = {
+                    title: document.getElementById('f-title').value,
+                    amount: parseFloat(document.getElementById('f-amount').value)
+                };
+            } else if (currentModalType === 'appointment') {
+                item = {
+                    name: document.getElementById('f-name').value,
+                    phone: document.getElementById('f-phone').value,
+                    doctor: document.getElementById('f-doc').value,
+                    service: document.getElementById('f-serv').value,
+                    date: document.getElementById('f-date').value,
+                    time: document.getElementById('f-time').value
+                };
+            }
+
+            const method = currentEditId ? 'PUT' : 'POST';
+            const url = currentEditId ? `/api/${currentModalType}s/${currentEditId}` : `/api/${currentModalType}s`;
+
+            await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: currentPass, item })
+            });
+            
+            hideModal();
+            loadData();
+        };
+
+        async function deleteItem(type, id) {
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
+            await fetch(`/api/${type}/${id}?password=${currentPass}`, { method: 'DELETE' });
+            loadData();
+        }
+    </script>
+</body>
+</html>

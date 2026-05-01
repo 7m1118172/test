@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حجز موعد | دنتاليا لوكس</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header id="header" class="scrolled">
+        <div class="container">
+            <div class="header-inner">
+                <a href="/" class="logo">DENTALIA <span>LUXE</span></a>
+                <nav>
+                    <ul>
+                        <li><a href="/" class="nav-link">الرئيسية</a></li>
+                        <li><a href="/doctors" class="nav-link">طاقمنا الطبي</a></li>
+                        <li><a href="/services" class="nav-link">خدماتنا</a></li>
+                        <li><a href="/articles" class="nav-link">المدونة</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main style="padding: 150px 0 100px;">
+        <div class="container" style="max-width: 600px;">
+            <div class="service-lux" style="padding: 50px;">
+                <div class="section-title" style="margin-bottom: 40px;">
+                    <h2>احجز موعداً</h2>
+                    <p style="color: var(--text-muted);">املأ البيانات وسنتواصل معك لتأكيد الحجز</p>
+                </div>
+                
+                <form id="booking-form">
+                    <div class="form-group">
+                        <label>الاسم الكامل</label>
+                        <input type="text" id="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="phone" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الخدمة المطلوبة</label>
+                        <select id="service" class="form-control" required>
+                            <option value="">جاري التحميل...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>اختر الطبيب</label>
+                        <select id="doctor" class="form-control" required>
+                            <option value="">جاري التحميل...</option>
+                        </select>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>التاريخ</label>
+                            <input type="date" id="date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>الوقت المفضل</label>
+                            <input type="time" id="time" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>ملاحظات إضافية (اختياري)</label>
+                        <textarea id="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn-premium" style="width: 100%; margin-top: 20px; border:none; padding: 15px;">تأكيد الحجز</button>
+                </form>
+                
+                <div id="success-msg" style="display: none; text-align: center; margin-top: 30px; color: #10b981;">
+                    <i data-lucide="check-circle" style="width: 50px; height: 50px; margin-bottom: 15px;"></i>
+                    <h3>تم استلام طلبك بنجاح!</h3>
+                    <p>سيتواصل معك فريقنا قريباً لتأكيد الموعد.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="padding: 40px 0; background: var(--primary); color: white; text-align: center;">
+        <p>&copy; 2024 دنتاليا لوكس</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        async function loadOptions() {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            
+            document.getElementById('doctor').innerHTML = data.doctors.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+            document.getElementById('service').innerHTML = data.services.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            
+            // Set min date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').setAttribute('min', today);
+        }
+
+        document.getElementById('booking-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const appointment = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                service: document.getElementById('service').value,
+                doctor: document.getElementById('doctor').value,
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value,
+                notes: document.getElementById('notes').value
+            };
+
+            await fetch('/api/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item: appointment })
+            });
+
+            document.getElementById('booking-form').style.display = 'none';
+            document.getElementById('success-msg').style.display = 'block';
+            lucide.createIcons();
+        };
+
+        loadOptions();
+    </script>
+</body>
+</html>

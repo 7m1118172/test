@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">المدونة الطبية | دنتاليا لوكس</title>
+    <meta name="description" id="page-desc"
+        content="نصائح ومعلومات طبية من خبراء دنتاليا لوكس للعناية بصحة وجمال أسنانك.">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .article-content img {
+            width: 100%;
+            border-radius: 30px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-lux);
+        }
+
+        .article-body {
+            font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+            line-height: 2.2;
+            color: #333;
+            text-align: justify;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="page-loader">
+        <div class="loader-logo">DENTALIA <span>LUXE</span></div>
+    </div>
+
+    <header id="header" class="scrolled">
+        <div class="container">
+            <div class="header-inner">
+                <a href="/" class="logo">DENTALIA <span>LUXE</span></a>
+                <nav>
+                    <ul>
+                        <li><a href="/" class="nav-link">الرئيسية</a></li>
+                        <li><a href="/doctors" class="nav-link">طاقمنا الطبي</a></li>
+                        <li><a href="/services" class="nav-link">خدماتنا</a></li>
+                        <li><a href="/articles" class="nav-link">المدونة</a></li>
+                    </ul>
+                </nav>
+                <div class="nav-actions"><a href="/booking" class="btn-premium nav-link"
+                        style="padding: 12px 30px;">احجز موعداً</a></div>
+            </div>
+        </div>
+    </header>
+
+    <main style="padding: 180px 0 100px;">
+        <div class="container" id="content-area">
+            <!-- Content loaded via JS -->
+        </div>
+    </main>
+
+    <footer style="padding: 60px 0; background: #050d1a; color: white; text-align: center;">
+        <p>&copy; 2024 دنتاليا لوكس - جميع الحقوق محفوظة</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        window.addEventListener('load', () => {
+            setTimeout(() => { document.getElementById('page-loader').classList.add('hidden'); }, 800);
+        });
+
+        // Smooth Page Transitions
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (link.getAttribute('href').startsWith('#')) return;
+                e.preventDefault();
+                const href = link.getAttribute('href');
+                document.body.style.animation = 'pageFadeIn 0.5s reverse forwards';
+                setTimeout(() => { window.location.href = href; }, 500);
+            });
+        });
+
+        async function loadContent() {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            const path = window.location.pathname;
+            const slug = path.split('/').pop();
+
+            if (slug && slug !== 'articles') {
+                const article = data.articles.find(a => a.slug === slug || a.id == slug);
+                if (article) renderArticle(article);
+                else renderList(data.articles);
+            } else {
+                renderList(data.articles);
+            }
+        }
+
+        function renderArticle(a) {
+            document.getElementById('content-area').innerHTML = `
+                <article class="article-content" style="max-width: 900px; margin: 0 auto;">
+                    <img src="${a.image}" alt="${a.title}" class="no-save">
+                    <h1 style="font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 900; color: var(--primary); margin-bottom: 20px;">${a.title}</h1>
+                    <div style="color: var(--accent); margin-bottom: 40px; font-weight: 700;">نشر في: ${new Date(a.createdAt).toLocaleDateString('ar-EG')}</div>
+                    <div class="article-body">${a.content}</div>
+                    <div style="margin-top: 60px;">
+                        <a href="/articles" class="btn-premium nav-link">العودة للمدونة</a>
+                    </div>
+                </article>
+            `;
+            document.getElementById('page-title').innerText = a.title + ' | دنتاليا لوكس';
+        }
+
+        function renderList(articles) {
+            document.getElementById('content-area').innerHTML = `
+                <div class="section-title">
+                    <h2>المدونة الطبية</h2>
+                    <p>نصائح ومعلومات من خبراء دنتاليا لوكس</p>
+                    <div class="divider"></div>
+                </div>
+                <div class="service-grid">
+                    ${articles.map(a => `
+                        <div class="service-lux" style="cursor: pointer;" onclick="location.href='/articles/${a.slug || a.id}'">
+                            <img src="${a.image}" style="width: 100%; border-radius: 20px; margin-bottom: 30px; height: 250px; object-fit: cover;" class="no-save">
+                            <h3 style="font-size: 22px; margin-bottom: 15px;">${a.title}</h3>
+                            <p style="opacity: 0.7; margin-bottom: 20px;">${a.description}</p>
+                            <div style="color: var(--accent); font-weight: 900;">اقرأ المقال كامل ←</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        loadContent();
+    </script>
+</body>
+
+</html>

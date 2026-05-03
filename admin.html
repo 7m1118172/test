@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background: #f0f2f5; }
-        #admin-content { display: none; }
+        #admin-content { display: block; }
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--primary); display: flex; align-items: center; justify-content: center; z-index: 2000;
@@ -68,13 +68,7 @@
 </head>
 <body>
 
-    <div id="login-overlay">
-        <div class="login-box">
-            <h2 style="margin-bottom: 30px; color: var(--primary);">دخول الإدارة</h2>
-            <input type="password" id="admin-pass" class="form-control" style="margin-bottom: 20px;" placeholder="كلمة المرور">
-            <button onclick="checkAuth()" class="btn-premium" style="width: 100%; padding: 15px;">دخول</button>
-        </div>
-    </div>
+    <!-- Login overlay removed -->
 
     <div id="admin-content">
         <div class="admin-sidebar">
@@ -189,21 +183,15 @@
     </div>
 
     <script>
-        let currentPass = '';
+        let currentPass = '123123'; // Hardcoded bypass
         let currentData = {};
         let currentModalType = '';
         let currentEditId = null;
         let financeChartObj = null;
 
-        function checkAuth() {
-            const pass = document.getElementById('admin-pass').value;
-            if (pass === '123123') {
-                currentPass = pass;
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('admin-content').style.display = 'block';
-                loadData();
-            } else { alert('خطأ!'); }
-        }
+        window.addEventListener('load', () => {
+            loadData();
+        });
 
         async function loadData() {
             const res = await fetch('/api/data');

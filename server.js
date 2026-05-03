@@ -11,6 +11,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
+// Serve favicon from root
+app.get('/DENTALIA%20LUXE.png', (req, res) => {
+    res.sendFile(path.join(__dirname, 'DENTALIA LUXE.png'));
+});
+app.get('/DENTALIA LUXE.png', (req, res) => {
+    res.sendFile(path.join(__dirname, 'DENTALIA LUXE.png'));
+});
+
 // قاعدة البيانات
 let database = {
   settings: {},
